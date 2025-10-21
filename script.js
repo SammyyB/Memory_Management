@@ -65,6 +65,8 @@ function runWithCompaction() {
   let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
+  // Clone jobs to avoid previous mutation
+  jobs = jobs.map(j => ({ ...j }));
   let memoryBlocks = [];
 
   jobs = jobs.map((j) => {
@@ -74,7 +76,7 @@ function runWithCompaction() {
 
     let start = j.arrival;
 
-    // Free memory from finished jobs
+    // Remove finished jobs from memory
     memoryBlocks = memoryBlocks.filter(b => b.finish > start);
 
     // Wait until enough memory is available
@@ -105,6 +107,8 @@ function runWithoutCompaction() {
   let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
+  // Clone jobs to avoid previous mutation
+  jobs = jobs.map(j => ({ ...j }));
   let memoryBlocks = [];
 
   jobs = jobs.map((j) => {
@@ -116,13 +120,11 @@ function runWithoutCompaction() {
 
     // Wait until enough memory is available
     while (true) {
-      // Remove finished jobs
       memoryBlocks = memoryBlocks.filter(b => b.finish > start);
       const usedMemory = memoryBlocks.reduce((sum, b) => sum + b.size, 0);
 
       if (usedMemory + j.size <= totalMemory) break;
 
-      // Wait until earliest finishing job
       const nextFree = Math.min(...memoryBlocks.map(b => b.finish));
       start = Math.max(start, nextFree);
     }
@@ -172,7 +174,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector("#withCompaction").addEventListener("click", runWithCompaction);
   document.querySelector("#withoutCompaction").addEventListener("click", runWithoutCompaction);
 
-  // Start with 1 blank job row
   if (document.querySelector("#jobTable tbody").rows.length === 0) {
     addJobRow();
   }
