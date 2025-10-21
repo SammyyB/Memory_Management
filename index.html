@@ -3,68 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Variable Partitioning Memory Management</title>
+  <title>Variable Partitioning Simulator</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h2>Variable Partitioning Memory Management</h2>
 
-  <section class="input-section">
-    <div class="mem-inputs">
-      <label>Memory Size (K):</label>
+  <div class="input-section">
+    <div class="form-group">
+      <label for="memorySize">Memory Size (K):</label>
       <input type="number" id="memorySize" value="1024" />
-      <label>OS Size (K):</label>
-      <input type="number" id="osSize" value="224" />
     </div>
 
+    <div class="form-group">
+      <label for="osSize">OS Size (K):</label>
+      <input type="number" id="osSize" value="224" />
+    </div>
+  </div>
+
+  <section id="jobSection">
+    <h3>Job Table</h3>
     <table id="jobTable">
       <thead>
         <tr>
-          <th>Job #</th>
-          <th>Job Size (K)</th>
-          <th>Arrival (HH:MM)</th>
+          <th>#</th>
+          <th>Size (K)</th>
+          <th>Arrival Time</th>
           <th>Run Time (min)</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>1</td>
-          <td><input type="number" value="175"></td>
-          <td><input type="time" value="08:00"></td>
-          <td><input type="number" value="40"></td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td><input type="number" value="210"></td>
-          <td><input type="time" value="08:00"></td>
-          <td><input type="number" value="65"></td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td><input type="number" value="500"></td>
-          <td><input type="time" value="08:15"></td>
-          <td><input type="number" value="125"></td>
-        </tr>
-        <tr>
-          <td>4</td>
-          <td><input type="number" value="65"></td>
-          <td><input type="time" value="08:20"></td>
-          <td><input type="number" value="25"></td>
-        </tr>
-        <tr>
-          <td>5</td>
-          <td><input type="number" value="200"></td>
-          <td><input type="time" value="09:00"></td>
-          <td><input type="number" value="70"></td>
+          <td><input type="number" min="1" placeholder="Size (K)" /></td>
+          <td><input type="time" /></td>
+          <td><input type="number" min="1" placeholder="Run Time (min)" /></td>
+          <td><button class="remove-btn">✖</button></td>
         </tr>
       </tbody>
     </table>
 
-    <div class="buttons">
-      <button onclick="runWithCompaction()">Run with Compaction</button>
-      <button onclick="runWithoutCompaction()">Run without Compaction</button>
+    <div class="add-btn-container">
+      <button id="addJob">+ Add Job</button>
     </div>
   </section>
+
+  <div class="button-group">
+    <button id="withCompaction">Run with Compaction</button>
+    <button id="withoutCompaction">Run without Compaction</button>
+  </div>
 
   <section id="outputSection">
     <h3>Results</h3>

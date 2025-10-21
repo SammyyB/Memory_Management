@@ -1,91 +1,161 @@
 body {
-  font-family: 'Montserrat', sans-serif;
-  background-color: #f5f9ff;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f8f8f8;
   color: #333;
   text-align: center;
-  padding: 20px;
 }
 
-h2 {
-  color: #004aad;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-.input-section {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  display: inline-block;
-  padding: 20px 40px;
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.mem-inputs {
+h2, h3 {
+  color: #4a148c;
   margin-bottom: 15px;
 }
 
-.mem-inputs input {
-  width: 80px;
-  margin: 0 10px;
-  padding: 4px;
+.input-section {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+input[type="number"],
+input[type="time"] {
+  padding: 8px;
+  width: 140px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
   text-align: center;
+  font-size: 14px;
 }
 
 table {
-  width: 100%;
+  width: 90%;
+  margin: 0 auto;
   border-collapse: collapse;
-  margin-top: 10px;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 th, td {
   border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+  padding: 10px;
 }
 
 th {
-  background-color: #007bff;
+  background-color: #6a1b9a;
   color: white;
+  font-weight: 500;
 }
 
-input[type="number"], input[type="time"] {
-  width: 80px;
-  padding: 4px;
+td input {
+  width: 100%;
+  border: none;
+  padding: 5px;
   text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  font-size: 14px;
 }
 
-.buttons {
-  margin-top: 15px;
+td input:focus {
+  outline: 1px solid #6a1b9a;
 }
 
 button {
-  background-color: #007bff;
+  background-color: #6a1b9a;
   color: white;
   border: none;
-  padding: 8px 20px;
-  border-radius: 5px;
-  cursor: pointer;
+  padding: 8px 16px;
   margin: 5px;
-  font-weight: bold;
-  transition: 0.2s;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s ease-in-out;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #4a148c;
 }
 
-#outputSection {
-  width: 90%;
-  margin: 20px auto;
-  text-align: center;
+.remove-btn {
+  background-color: #d32f2f;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.remove-btn:hover {
+  background-color: #b71c1c;
+}
+
+.add-btn-container {
+  margin-top: 15px;
+}
+
+#resultTable {
+  margin-top: 25px;
 }
 
 #summary {
-  margin-top: 15px;
-  font-weight: bold;
-  color: #004aad;
+  margin-top: 10px;
+  font-weight: 500;
+  color: #333;
+}
+
+.button-group {
+  margin: 25px 0;
+}
+
+/* --- Responsive Layout --- */
+@media (max-width: 768px) {
+  .input-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  table {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  th, td {
+    padding: 6px;
+  }
+
+  button {
+    width: 80%;
+    font-size: 13px;
+  }
+
+  .button-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  input[type="number"],
+  input[type="time"] {
+    width: 120px;
+  }
 }
