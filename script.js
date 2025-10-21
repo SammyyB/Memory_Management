@@ -34,111 +34,96 @@ function displayResults(jobs, title) {
   tbody.innerHTML = "";
   let lastFinish = 0;
 
-  jobs.forEach((j) => {
+  jobs.forEach(j => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${j.id}</td>
       <td>${minutesToTime(j.arrival)}</td>
       <td>${j.run}</td>
-      <td>${minutesToTime(j.start)}</td>
-      <td>${minutesToTime(j.finish)}</td>
-      <td>${j.wait}</td>
-      <td>${j.memoryAfter}</td>
+      <td>${j.start === "-" ? "-" : minutesToTime(j.start)}</td>
+      <td>${j.finish === "-" ? "-" : minutesToTime(j.finish)}</td>
+      <td>${j.wait === "-" ? "-" : j.wait}</td>
+      <td>${j.memoryAfter === "-" ? "-" : j.memoryAfter}</td>
     `;
     tbody.appendChild(tr);
-    lastFinish = Math.max(lastFinish, j.finish);
+    if (!isNaN(j.finish)) lastFinish = Math.max(lastFinish, j.finish);
   });
 
-  const firstArrival = Math.min(...jobs.map((j) => j.arrival));
+  const firstArrival = Math.min(...jobs.map(j => j.arrival));
   const totalTime = lastFinish - firstArrival;
-
   document.querySelector("#summary").textContent =
     `${title} — All jobs finished at: ${minutesToTime(lastFinish)} (Total elapsed time: ${totalTime} minutes)`;
 }
 
-// --- With Compaction ---
+// --- Timeline-Based Simulation ---
+function simulateJobs(jobs, totalMemory, compaction) {
+  const timeline = []; // {start, finish, size}
+  const results = [];
+
+  for (let job of jobs) {
+    if (job.size > totalMemory) {
+      results.push({ ...job, start: "-", finish: "-", wait: "-", memoryAfter: "-" });
+      continue;
+    }
+
+    let currentTime = job.arrival;
+
+    while (true) {
+      // Clean up finished jobs from timeline
+      const runningJobs = timeline.filter(j => j.finish > currentTime);
+      const usedMemory = runningJobs.reduce((sum, j) => sum + j.size, 0);
+
+      if (usedMemory + job.size <= totalMemory) break;
+
+      // Move time to the earliest finish among running jobs
+      const nextFinish = Math.min(...runningJobs.map(j => j.finish));
+      currentTime = nextFinish;
+    }
+
+    const start = currentTime;
+    const finish = start + job.run;
+    const wait = start - job.arrival;
+
+    timeline.push({ start, finish, size: job.size });
+
+    let memoryAfter;
+    if (compaction) {
+      // Memory available at start = totalMemory - sum of running jobs at this start time
+      memoryAfter = totalMemory - timeline.reduce((sum, j) => sum + j.size, 0);
+    } else {
+      // Without compaction: sequential, memory only freed by jobs that finished before this start
+      const active = timeline.filter(j => j.finish > start);
+      memoryAfter = totalMemory - active.reduce((sum, j) => sum + j.size, 0);
+    }
+
+    results.push({ ...job, start, finish, wait, memoryAfter });
+  }
+
+  return results;
+}
+
+// --- Run With Compaction ---
 function runWithCompaction() {
   const memory = parseInt(document.getElementById("memorySize").value);
   const os = parseInt(document.getElementById("osSize").value);
   const available = memory - os;
-
-  let jobs = parseJobs();
+  const jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
-  // Clone jobs to avoid previous mutation
-  jobs = jobs.map(j => ({ ...j }));
-  let memoryBlocks = [];
-
-  jobs = jobs.map((j) => {
-    if (j.size > available) {
-      return { ...j, start: "-", finish: "-", wait: "-", memoryAfter: "-" };
-    }
-
-    let start = j.arrival;
-
-    // Remove finished jobs from memory
-    memoryBlocks = memoryBlocks.filter(b => b.finish > start);
-
-    // Wait until enough memory is available
-    while (memoryBlocks.reduce((sum, b) => sum + b.size, 0) + j.size > available) {
-      const earliestFinish = Math.min(...memoryBlocks.map(b => b.finish));
-      start = Math.max(start, earliestFinish);
-      memoryBlocks = memoryBlocks.filter(b => b.finish > start);
-    }
-
-    const wait = start - j.arrival;
-    const finish = start + j.run;
-
-    memoryBlocks.push({ start, finish, size: j.size });
-    const memoryAfter = available - memoryBlocks.reduce((sum, b) => sum + b.size, 0);
-
-    return { ...j, start, wait, finish, memoryAfter };
-  });
-
-  displayResults(jobs, "With Compaction");
+  const results = simulateJobs(jobs, available, true);
+  displayResults(results, "With Compaction");
 }
 
-// --- Without Compaction ---
+// --- Run Without Compaction ---
 function runWithoutCompaction() {
   const memory = parseInt(document.getElementById("memorySize").value);
   const os = parseInt(document.getElementById("osSize").value);
-  const totalMemory = memory - os;
-
-  let jobs = parseJobs();
+  const available = memory - os;
+  const jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
-  // Clone jobs to avoid previous mutation
-  jobs = jobs.map(j => ({ ...j }));
-  let memoryBlocks = [];
-
-  jobs = jobs.map((j) => {
-    if (j.size > totalMemory) {
-      return { ...j, start: "-", finish: "-", wait: "-", memoryAfter: "-" };
-    }
-
-    let start = j.arrival;
-
-    // Wait until enough memory is available
-    while (true) {
-      memoryBlocks = memoryBlocks.filter(b => b.finish > start);
-      const usedMemory = memoryBlocks.reduce((sum, b) => sum + b.size, 0);
-
-      if (usedMemory + j.size <= totalMemory) break;
-
-      const nextFree = Math.min(...memoryBlocks.map(b => b.finish));
-      start = Math.max(start, nextFree);
-    }
-
-    const wait = start - j.arrival;
-    const finish = start + j.run;
-
-    memoryBlocks.push({ start, finish, size: j.size });
-    const memoryAfter = totalMemory - memoryBlocks.reduce((sum, b) => sum + b.size, 0);
-
-    return { ...j, start, wait, finish, memoryAfter };
-  });
-
-  displayResults(jobs, "Without Compaction");
+  const results = simulateJobs(jobs, available, false);
+  displayResults(results, "Without Compaction");
 }
 
 // --- Add / Remove Job Rows ---
@@ -174,7 +159,5 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector("#withCompaction").addEventListener("click", runWithCompaction);
   document.querySelector("#withoutCompaction").addEventListener("click", runWithoutCompaction);
 
-  if (document.querySelector("#jobTable tbody").rows.length === 0) {
-    addJobRow();
-  }
+  if (document.querySelector("#jobTable tbody").rows.length === 0) addJobRow();
 });
