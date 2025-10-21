@@ -42,7 +42,11 @@ function displayResults(jobs, title) {
     lastFinish = Math.max(lastFinish, j.finish);
   });
 
-  document.querySelector("#summary").textContent = `All jobs finished at: ${minutesToTime(lastFinish)}`;
+  const firstArrival = Math.min(...jobs.map(j => j.arrival));
+  const totalTime = lastFinish - firstArrival;
+
+  document.querySelector("#summary").textContent = 
+    `${title} — All jobs finished at: ${minutesToTime(lastFinish)} (Total elapsed time: ${totalTime} minutes)`;
 }
 
 function runWithCompaction() {
@@ -58,7 +62,7 @@ function runWithCompaction() {
     const wait = Math.max(0, currentTime - j.arrival);
     const start = Math.max(currentTime, j.arrival);
     const finish = start + j.run;
-    memAvail = available - j.size;
+    memAvail = available - j.size; // compaction: memory resets after each job
     currentTime = finish;
     return { ...j, wait, start, finish, memoryAfter: memAvail };
   });
@@ -79,7 +83,7 @@ function runWithoutCompaction() {
     const wait = Math.max(0, currentTime - j.arrival);
     const start = Math.max(currentTime, j.arrival);
     const finish = start + j.run;
-    memAvail -= j.size; // no compaction → memory keeps decreasing
+    memAvail -= j.size; // no compaction → memory decreases over time
     currentTime = finish;
     return { ...j, wait, start, finish, memoryAfter: memAvail };
   });
