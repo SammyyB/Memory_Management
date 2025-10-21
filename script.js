@@ -65,11 +65,10 @@ function runWithCompaction() {
   let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
-  let currentTime = jobs[0].arrival;
+  let currentTime = jobs[0].arrival; // start from first job arrival
 
   jobs = jobs.map((j) => {
     if (j.size > available) {
-      alert(`Job ${j.id} exceeds available memory and cannot run.`);
       return { ...j, start: "-", finish: "-", wait: "-", memoryAfter: "-" };
     }
 
@@ -78,8 +77,8 @@ function runWithCompaction() {
     const finish = start + j.run;
     const memoryAfter = available - j.size;
 
-    currentTime = finish; // memory freed after each job
-    return { ...j, wait, start, finish, memoryAfter };
+    currentTime = finish; // free memory immediately after job
+    return { ...j, start, wait, finish, memoryAfter };
   });
 
   displayResults(jobs, "With Compaction");
@@ -94,30 +93,30 @@ function runWithoutCompaction() {
   let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
-  let currentTime = 0;
   let memoryBlocks = []; // track running jobs {start, finish, size}
 
   jobs = jobs.map((j) => {
     if (j.size > totalMemory) {
-      alert(`Job ${j.id} exceeds total memory and cannot run.`);
       return { ...j, start: "-", finish: "-", wait: "-", memoryAfter: "-" };
     }
 
-    // Determine earliest possible start based on memory
     let start = j.arrival;
+
     while (true) {
-      // free memory blocks that finished before 'start'
+      // remove memory blocks that finished before 'start'
       memoryBlocks = memoryBlocks.filter(b => b.finish > start);
       const usedMemory = memoryBlocks.reduce((sum, b) => sum + b.size, 0);
 
-      if (usedMemory + j.size <= totalMemory) break; // enough memory
-      // wait until earliest finishing job frees memory
+      if (usedMemory + j.size <= totalMemory) break; // enough memory to start
+
+      // wait until the earliest finishing job completes
       const nextFree = Math.min(...memoryBlocks.map(b => b.finish));
       start = Math.max(start, nextFree);
     }
 
     const wait = start - j.arrival;
     const finish = start + j.run;
+
     memoryBlocks.push({ start, finish, size: j.size });
     const memoryAfter = totalMemory - memoryBlocks.reduce((sum, b) => sum + b.size, 0);
 
