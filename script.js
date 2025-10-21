@@ -1,10 +1,12 @@
 // --- Helper Functions ---
 function timeToMinutes(t) {
+  if (!t) return NaN;
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
 
 function minutesToTime(mins) {
+  if (isNaN(mins)) return "--:--";
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
@@ -15,10 +17,10 @@ function parseJobs() {
   const rows = document.querySelectorAll("#jobTable tbody tr");
   return Array.from(rows)
     .map((row, index) => {
-      const cells = row.querySelectorAll("input");
-      const size = parseInt(cells[0].value);
-      const arrival = cells[1].value ? timeToMinutes(cells[1].value) : NaN;
-      const run = parseInt(cells[2].value);
+      const inputs = row.querySelectorAll("input");
+      const size = parseInt(inputs[0].value);
+      const arrival = timeToMinutes(inputs[1].value);
+      const run = parseInt(inputs[2].value);
 
       if (isNaN(size) || isNaN(arrival) || isNaN(run)) return null;
       return { id: index + 1, size, arrival, run };
@@ -41,7 +43,7 @@ function displayResults(jobs, title) {
       <td>${minutesToTime(j.start)}</td>
       <td>${minutesToTime(j.finish)}</td>
       <td>${j.wait}</td>
-      <td>${j.memoryAfter}</td>
+      <td>${j.memoryAfter} K</td>
     `;
     tbody.appendChild(tr);
     lastFinish = Math.max(lastFinish, j.finish);
@@ -50,8 +52,8 @@ function displayResults(jobs, title) {
   const firstArrival = Math.min(...jobs.map((j) => j.arrival));
   const totalTime = lastFinish - firstArrival;
 
-  document.querySelector("#summary").textContent = 
-    `${title} — All jobs finished at: ${minutesToTime(lastFinish)} (Total elapsed time: ${totalTime} minutes)`;
+  document.querySelector("#summary").textContent =
+    `${title} — All jobs finished at ${minutesToTime(lastFinish)} (Total elapsed time: ${totalTime} minutes)`;
 }
 
 // --- Compaction Logic ---
@@ -114,6 +116,7 @@ function addJobRow() {
   `;
   tbody.appendChild(tr);
 
+  // Remove button
   tr.querySelector(".remove-btn").addEventListener("click", () => {
     tr.remove();
     updateJobNumbers();

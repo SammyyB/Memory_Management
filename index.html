@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Variable Partitioning Simulator</title>
+  <title>Variable Partitioning Memory Management</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h2>Variable Partitioning Memory Management</h2>
 
-  <div class="input-section">
+  <section class="input-section">
     <div class="form-group">
       <label for="memorySize">Memory Size (K):</label>
       <input type="number" id="memorySize" value="1024" />
@@ -19,16 +19,15 @@
       <label for="osSize">OS Size (K):</label>
       <input type="number" id="osSize" value="224" />
     </div>
-  </div>
+  </section>
 
-  <section id="jobSection">
-    <h3>Job Table</h3>
+  <section class="table-section">
     <table id="jobTable">
       <thead>
         <tr>
-          <th>#</th>
-          <th>Size (K)</th>
-          <th>Arrival Time</th>
+          <th>Job #</th>
+          <th>Job Size (K)</th>
+          <th>Arrival (HH:MM)</th>
           <th>Run Time (min)</th>
           <th>Action</th>
         </tr>
@@ -36,9 +35,37 @@
       <tbody>
         <tr>
           <td>1</td>
-          <td><input type="number" min="1" placeholder="Size (K)" /></td>
-          <td><input type="time" /></td>
-          <td><input type="number" min="1" placeholder="Run Time (min)" /></td>
+          <td><input type="number" value="175" min="1" /></td>
+          <td><input type="time" value="08:00" /></td>
+          <td><input type="number" value="40" min="1" /></td>
+          <td><button class="remove-btn">✖</button></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><input type="number" value="210" min="1" /></td>
+          <td><input type="time" value="08:00" /></td>
+          <td><input type="number" value="65" min="1" /></td>
+          <td><button class="remove-btn">✖</button></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><input type="number" value="500" min="1" /></td>
+          <td><input type="time" value="08:15" /></td>
+          <td><input type="number" value="125" min="1" /></td>
+          <td><button class="remove-btn">✖</button></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><input type="number" value="65" min="1" /></td>
+          <td><input type="time" value="08:20" /></td>
+          <td><input type="number" value="25" min="1" /></td>
+          <td><button class="remove-btn">✖</button></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><input type="number" value="200" min="1" /></td>
+          <td><input type="time" value="09:00" /></td>
+          <td><input type="number" value="70" min="1" /></td>
           <td><button class="remove-btn">✖</button></td>
         </tr>
       </tbody>
@@ -49,10 +76,10 @@
     </div>
   </section>
 
-  <div class="button-group">
+  <section class="button-group">
     <button id="withCompaction">Run with Compaction</button>
     <button id="withoutCompaction">Run without Compaction</button>
-  </div>
+  </section>
 
   <section id="outputSection">
     <h3>Results</h3>
