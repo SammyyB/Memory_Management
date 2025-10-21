@@ -68,12 +68,17 @@ function runWithCompaction() {
   let currentTime = jobs[0].arrival;
 
   jobs = jobs.map((j) => {
+    if (j.size > available) {
+      alert(`Job ${j.id} exceeds available memory and cannot run.`);
+      return { ...j, start: "-", finish: "-", wait: "-", memoryAfter: "-" };
+    }
+
     const start = Math.max(j.arrival, currentTime);
     const wait = start - j.arrival;
     const finish = start + j.run;
     const memoryAfter = available - j.size;
 
-    currentTime = finish; // compaction: free memory after each job
+    currentTime = finish; // memory freed after each job
     return { ...j, wait, start, finish, memoryAfter };
   });
 
@@ -89,25 +94,34 @@ function runWithoutCompaction() {
   let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
-  let currentTime = jobs[0].arrival;
-  let usedMemory = 0;
+  let currentTime = 0;
+  let memoryBlocks = []; // track running jobs {start, finish, size}
 
   jobs = jobs.map((j) => {
-    // if not enough memory, job waits
-    if (usedMemory + j.size > totalMemory) {
-      currentTime += j.run; // simulate waiting until space frees
-      usedMemory = 0; // memory freed (old jobs finished)
+    if (j.size > totalMemory) {
+      alert(`Job ${j.id} exceeds total memory and cannot run.`);
+      return { ...j, start: "-", finish: "-", wait: "-", memoryAfter: "-" };
     }
 
-    const start = Math.max(j.arrival, currentTime);
+    // Determine earliest possible start based on memory
+    let start = j.arrival;
+    while (true) {
+      // free memory blocks that finished before 'start'
+      memoryBlocks = memoryBlocks.filter(b => b.finish > start);
+      const usedMemory = memoryBlocks.reduce((sum, b) => sum + b.size, 0);
+
+      if (usedMemory + j.size <= totalMemory) break; // enough memory
+      // wait until earliest finishing job frees memory
+      const nextFree = Math.min(...memoryBlocks.map(b => b.finish));
+      start = Math.max(start, nextFree);
+    }
+
     const wait = start - j.arrival;
     const finish = start + j.run;
+    memoryBlocks.push({ start, finish, size: j.size });
+    const memoryAfter = totalMemory - memoryBlocks.reduce((sum, b) => sum + b.size, 0);
 
-    usedMemory += j.size;
-    const memoryAfter = totalMemory - usedMemory;
-
-    currentTime = finish;
-    return { ...j, wait, start, finish, memoryAfter };
+    return { ...j, start, wait, finish, memoryAfter };
   });
 
   displayResults(jobs, "Without Compaction");
