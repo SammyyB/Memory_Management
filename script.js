@@ -28,7 +28,7 @@ function parseJobs() {
     .sort((a, b) => a.arrival - b.arrival);
 }
 
-// --- Display Results Table ---
+// --- Display Results ---
 function displayResults(jobs, title) {
   const tbody = document.querySelector("#resultTable tbody");
   tbody.innerHTML = "";
@@ -65,19 +65,31 @@ function runWithCompaction() {
   let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
-  let currentTime = jobs[0].arrival; // start from first job arrival
+  let memoryBlocks = [];
 
   jobs = jobs.map((j) => {
     if (j.size > available) {
       return { ...j, start: "-", finish: "-", wait: "-", memoryAfter: "-" };
     }
 
-    const start = Math.max(j.arrival, currentTime);
+    let start = j.arrival;
+
+    // Free memory from finished jobs
+    memoryBlocks = memoryBlocks.filter(b => b.finish > start);
+
+    // Wait until enough memory is available
+    while (memoryBlocks.reduce((sum, b) => sum + b.size, 0) + j.size > available) {
+      const earliestFinish = Math.min(...memoryBlocks.map(b => b.finish));
+      start = Math.max(start, earliestFinish);
+      memoryBlocks = memoryBlocks.filter(b => b.finish > start);
+    }
+
     const wait = start - j.arrival;
     const finish = start + j.run;
-    const memoryAfter = available - j.size;
 
-    currentTime = finish; // free memory immediately after job
+    memoryBlocks.push({ start, finish, size: j.size });
+    const memoryAfter = available - memoryBlocks.reduce((sum, b) => sum + b.size, 0);
+
     return { ...j, start, wait, finish, memoryAfter };
   });
 
@@ -93,7 +105,7 @@ function runWithoutCompaction() {
   let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
-  let memoryBlocks = []; // track running jobs {start, finish, size}
+  let memoryBlocks = [];
 
   jobs = jobs.map((j) => {
     if (j.size > totalMemory) {
@@ -102,14 +114,15 @@ function runWithoutCompaction() {
 
     let start = j.arrival;
 
+    // Wait until enough memory is available
     while (true) {
-      // remove memory blocks that finished before 'start'
+      // Remove finished jobs
       memoryBlocks = memoryBlocks.filter(b => b.finish > start);
       const usedMemory = memoryBlocks.reduce((sum, b) => sum + b.size, 0);
 
-      if (usedMemory + j.size <= totalMemory) break; // enough memory to start
+      if (usedMemory + j.size <= totalMemory) break;
 
-      // wait until the earliest finishing job completes
+      // Wait until earliest finishing job
       const nextFree = Math.min(...memoryBlocks.map(b => b.finish));
       start = Math.max(start, nextFree);
     }
