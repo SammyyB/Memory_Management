@@ -3,36 +3,89 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Variable Partitioning Simulator</title>
+  <title>Variable Partitioning Memory Management</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h2>Variable Partitioning Memory Management</h2>
 
-  <div class="input-section">
-    <label for="memorySize">Memory Size (K):</label>
-    <input type="number" id="memorySize" value="1024" />
-
-    <label for="osSize">OS Size (K):</label>
-    <input type="number" id="osSize" value="224" />
-
-    <textarea id="jobs" placeholder="Enter jobs: size, arrival, runtime per line
-Example:
-175,8:00,40
-210,8:00,65
-500,8:15,125
-65,8:20,25
-200,9:00,70"></textarea>
-
-    <div class="button-group">
-      <button id="withCompaction">Run with Compaction</button>
-      <button id="withoutCompaction">Run without Compaction</button>
+  <section class="input-section">
+    <div class="mem-inputs">
+      <label>Memory Size (K):</label>
+      <input type="number" id="memorySize" value="1024" />
+      <label>OS Size (K):</label>
+      <input type="number" id="osSize" value="224" />
     </div>
-  </div>
 
-  <h3>Results</h3>
-  <div id="results"></div>
+    <table id="jobTable">
+      <thead>
+        <tr>
+          <th>Job #</th>
+          <th>Job Size (K)</th>
+          <th>Arrival (HH:MM)</th>
+          <th>Run Time (min)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><input type="number" value="175"></td>
+          <td><input type="time" value="08:00"></td>
+          <td><input type="number" value="40"></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><input type="number" value="210"></td>
+          <td><input type="time" value="08:00"></td>
+          <td><input type="number" value="65"></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><input type="number" value="500"></td>
+          <td><input type="time" value="08:15"></td>
+          <td><input type="number" value="125"></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><input type="number" value="65"></td>
+          <td><input type="time" value="08:20"></td>
+          <td><input type="number" value="25"></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><input type="number" value="200"></td>
+          <td><input type="time" value="09:00"></td>
+          <td><input type="number" value="70"></td>
+        </tr>
+      </tbody>
+    </table>
 
-  <script type="module" src="script.js"></script>
+    <div class="buttons">
+      <button onclick="runWithCompaction()">Run with Compaction</button>
+      <button onclick="runWithoutCompaction()">Run without Compaction</button>
+    </div>
+  </section>
+
+  <section id="outputSection">
+    <h3>Results</h3>
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>Job #</th>
+          <th>Arrival</th>
+          <th>Run Time</th>
+          <th>Start</th>
+          <th>Finish</th>
+          <th>Wait (min)</th>
+          <th>Memory Available After Job Allocation (K)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <p id="summary"></p>
+  </section>
+
+  <script src="script.js"></script>
 </body>
 </html>
