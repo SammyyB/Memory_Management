@@ -6,7 +6,7 @@ function timeToMinutes(t) {
 }
 
 function minutesToTime(mins) {
-  if (isNaN(mins)) return "--:--";
+  if (isNaN(mins)) return "";
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
@@ -17,15 +17,15 @@ function parseJobs() {
   const rows = document.querySelectorAll("#jobTable tbody tr");
   return Array.from(rows)
     .map((row, index) => {
-      const inputs = row.querySelectorAll("input");
-      const size = parseInt(inputs[0].value);
-      const arrival = timeToMinutes(inputs[1].value);
-      const run = parseInt(inputs[2].value);
-
+      const cells = row.querySelectorAll("input");
+      const size = parseInt(cells[0].value);
+      const arrival = timeToMinutes(cells[1].value);
+      const run = parseInt(cells[2].value);
       if (isNaN(size) || isNaN(arrival) || isNaN(run)) return null;
       return { id: index + 1, size, arrival, run };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a, b) => a.arrival - b.arrival);
 }
 
 // --- Display Results Table ---
@@ -43,7 +43,7 @@ function displayResults(jobs, title) {
       <td>${minutesToTime(j.start)}</td>
       <td>${minutesToTime(j.finish)}</td>
       <td>${j.wait}</td>
-      <td>${j.memoryAfter} K</td>
+      <td>${j.memoryAfter}</td>
     `;
     tbody.appendChild(tr);
     lastFinish = Math.max(lastFinish, j.finish);
@@ -53,47 +53,59 @@ function displayResults(jobs, title) {
   const totalTime = lastFinish - firstArrival;
 
   document.querySelector("#summary").textContent =
-    `${title} — All jobs finished at ${minutesToTime(lastFinish)} (Total elapsed time: ${totalTime} minutes)`;
+    `${title} — All jobs finished at: ${minutesToTime(lastFinish)} (Total elapsed time: ${totalTime} minutes)`;
 }
 
-// --- Compaction Logic ---
+// --- With Compaction ---
 function runWithCompaction() {
   const memory = parseInt(document.getElementById("memorySize").value);
   const os = parseInt(document.getElementById("osSize").value);
   const available = memory - os;
-  let jobs = parseJobs().sort((a, b) => a.arrival - b.arrival);
+
+  let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
   let currentTime = jobs[0].arrival;
 
   jobs = jobs.map((j) => {
-    const wait = Math.max(0, currentTime - j.arrival);
-    const start = Math.max(currentTime, j.arrival);
+    const start = Math.max(j.arrival, currentTime);
+    const wait = start - j.arrival;
     const finish = start + j.run;
     const memoryAfter = available - j.size;
-    currentTime = finish;
+
+    currentTime = finish; // compaction: free memory after each job
     return { ...j, wait, start, finish, memoryAfter };
   });
 
   displayResults(jobs, "With Compaction");
 }
 
+// --- Without Compaction ---
 function runWithoutCompaction() {
   const memory = parseInt(document.getElementById("memorySize").value);
   const os = parseInt(document.getElementById("osSize").value);
-  const available = memory - os;
-  let jobs = parseJobs().sort((a, b) => a.arrival - b.arrival);
+  const totalMemory = memory - os;
+
+  let jobs = parseJobs();
   if (!jobs.length) return alert("Please enter at least one valid job.");
 
   let currentTime = jobs[0].arrival;
-  let memAvail = available;
+  let usedMemory = 0;
 
   jobs = jobs.map((j) => {
-    const wait = Math.max(0, currentTime - j.arrival);
-    const start = Math.max(currentTime, j.arrival);
+    // if not enough memory, job waits
+    if (usedMemory + j.size > totalMemory) {
+      currentTime += j.run; // simulate waiting until space frees
+      usedMemory = 0; // memory freed (old jobs finished)
+    }
+
+    const start = Math.max(j.arrival, currentTime);
+    const wait = start - j.arrival;
     const finish = start + j.run;
-    memAvail -= j.size;
-    const memoryAfter = memAvail;
+
+    usedMemory += j.size;
+    const memoryAfter = totalMemory - usedMemory;
+
     currentTime = finish;
     return { ...j, wait, start, finish, memoryAfter };
   });
@@ -116,7 +128,6 @@ function addJobRow() {
   `;
   tbody.appendChild(tr);
 
-  // Remove button
   tr.querySelector(".remove-btn").addEventListener("click", () => {
     tr.remove();
     updateJobNumbers();
@@ -134,4 +145,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector("#addJob").addEventListener("click", addJobRow);
   document.querySelector("#withCompaction").addEventListener("click", runWithCompaction);
   document.querySelector("#withoutCompaction").addEventListener("click", runWithoutCompaction);
+
+  // Start with 1 blank job row
+  if (document.querySelector("#jobTable tbody").rows.length === 0) {
+    addJobRow();
+  }
 });
